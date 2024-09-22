@@ -6,24 +6,18 @@ import { useState } from 'react';
 
 function UploadForm() {
   const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   // Handle file selection
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-    setError(null);
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
 
     if (!file) {
-      setError('Please select an Excel file to upload.');
-      setLoading(false);
+      alert('Please select an Excel file to upload.');
       return;
     }
 
@@ -47,13 +41,11 @@ function UploadForm() {
         a.remove();
       } else {
         const errorData = await response.json();
-        setError(`Error: ${errorData.error}`);
+        alert(`Error: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      setError('An error occurred while uploading the file. Please try again.');
-    } finally {
-      setLoading(false);
+      alert('An error occurred while uploading the file. Please try again.');
     }
   };
 
@@ -66,13 +58,9 @@ function UploadForm() {
           id="fileInput"
           accept=".xlsx, .xls"
           onChange={handleFileChange}
-          disabled={loading}
         />
       </label>
-      <button type="submit" disabled={loading}>
-        {loading ? 'Converting...' : 'Convert to Calendar'}
-      </button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <button type="submit">Convert to Calendar</button>
     </form>
   );
 }
