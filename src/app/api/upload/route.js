@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
 import { createEvents } from 'ics';
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 const openai = new OpenAI({
@@ -11,10 +10,10 @@ const openai = new OpenAI({
 
 const CalendarEvent = z.object({
   title: z.string(),
-  start: z.tuple([z.string(), z.string(), z.string(), z.string(), z.string()]),
-  end: z.tuple([z.string(), z.string(), z.string(), z.string(), z.string()]),
+  start: z.array(z.string().or(z.number())).length(5),
+  end: z.array(z.string().or(z.number())).length(5),
   description: z.string(),
-  url: z.string().optional(),
+  url: z.string().optional().nullable(),
 });
 
 const CalendarEvents = z.array(CalendarEvent);
@@ -59,11 +58,26 @@ export async function POST(request) {
     }
 
     console.log('Creating ICS events');
-    const { error, value } = createEvents(events);
+    let icsEvents = events.map(event => {
+      const icsEvent = {
+        start: event.start.map(Number),
+        end: event.end.map(Number),
+        title: event.title,
+        description: event.description,
+      };
+      if (event.url && event.url.trim() !== '') {
+        icsEvent.url = event.url;
+      }
+      return icsEvent;
+    });
+
+    console.log('ICS events before creation:', JSON.stringify(icsEvents, null, 2));
+
+    const { error, value } = createEvents(icsEvents);
 
     if (error) {
       console.error('Error creating ICS events:', error);
-      return NextResponse.json({ error: `Failed to create ICS events: ${error}` }, { status: 500 });
+      return NextResponse.json({ error: `Failed to create ICS events: ${JSON.stringify(error)}` }, { status: 500 });
     }
 
     if (!value) {
@@ -94,24 +108,64 @@ async function interpretDataWithAI(jsonData) {
     Each event should have a title, start date and time, end date and time, description, and URL if available.
     Here's the data:
     ${JSON.stringify(jsonData, null, 2)}
+
+    Return the events as a JSON array in the following format:
+    [
+      {
+        "title": "Event Title",
+        "start": ["YYYY", "MM", "DD", "HH", "mm"],
+        "end": ["YYYY", "MM", "DD", "HH", "mm"],
+        "description": "Event description",
+        "url": "Event URL (if available)"
+      },
+      ...
+    ]
+    Even if there's only one event, please return it as an array with a single object.
   `;
 
   console.log('Sending request to OpenAI (GPT-4)');
   try {
-    const completion = await openai.beta.chat.completions.parse({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "Extract the event information from the provided data." },
         { role: "user", content: prompt },
       ],
-      response_format: zodResponseFormat(CalendarEvents, "events"),
+      response_format: { type: "json_object" },
     });
 
-    const events = completion.choices[0].message.parsed;
-    console.log('AI interpreted events:', JSON.stringify(events).slice(0, 100) + '...');
-    return events;
+    const rawResponse = JSON.parse(completion.choices[0].message.content);
+    console.log('Raw AI response:', JSON.stringify(rawResponse).slice(0, 100) + '...');
+
+    let events;
+    if (Array.isArray(rawResponse)) {
+      events = rawResponse;
+    } else if (rawResponse.events && Array.isArray(rawResponse.events)) {
+      events = rawResponse.events;
+    } else if (typeof rawResponse === 'object' && rawResponse !== null) {
+      events = [rawResponse];
+    } else {
+      throw new Error('Unexpected response format from AI');
+    }
+
+    // Validate and transform each event
+    const validatedEvents = events.map(event => {
+      const validatedEvent = CalendarEvent.parse(event);
+      // Ensure start and end are arrays of numbers
+      validatedEvent.start = validatedEvent.start.map(Number);
+      validatedEvent.end = validatedEvent.end.map(Number);
+      // Remove url if it's an empty string
+      if (validatedEvent.url === '') {
+        delete validatedEvent.url;
+      }
+      return validatedEvent;
+    });
+
+    console.log('Validated events:', JSON.stringify(validatedEvents, null, 2));
+
+    return validatedEvents;
   } catch (error) {
-    console.error('Error in OpenAI API call:', error);
+    console.error('Error in OpenAI API call or validation:', error);
     throw error;
   }
 }
