@@ -1,66 +1,37 @@
 import { NextResponse } from 'next/server';
-import multer from 'multer';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import { createEvents } from 'ics';
+import OpenAI from 'openai';
 
-const upload = multer({ storage: multer.memoryStorage() });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request) {
-  const formData = await request.formData();
-  const file = formData.get('file');
-
-  if (!file) {
-    return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
-  }
-
-  const buffer = await file.arrayBuffer();
-
   try {
+    const formData = await request.formData();
+    const file = formData.get('file');
+
+    if (!file) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-
-    // Convert the sheet data to JSON
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    // Transform jsonData into events
-    const events = jsonData.map((entry) => {
-      const [startDate, startTime] = entry['Date'].split(' ');
-      const [startHour, startMinute] = startTime.split(':').map(Number);
+    // Use AI to interpret the data
+    const events = await interpretDataWithAI(jsonData);
 
-      // Assuming each session is 75 minutes (1 hour and 15 minutes)
-      const startDateTime = new Date(`${startDate} ${startTime}`);
-      const endDateTime = new Date(startDateTime.getTime() + 75 * 60000); // Add 75 minutes
-
-      return {
-        title: `${entry['Course']} - ${entry['Topic']}`,
-        description: `Faculty: ${entry['Faculty']}\nMeeting Link: ${entry['Meeting Link']}`,
-        start: [
-          startDateTime.getFullYear(),
-          startDateTime.getMonth() + 1,
-          startDateTime.getDate(),
-          startDateTime.getHours(),
-          startDateTime.getMinutes(),
-        ],
-        end: [
-          endDateTime.getFullYear(),
-          endDateTime.getMonth() + 1,
-          endDateTime.getDate(),
-          endDateTime.getHours(),
-          endDateTime.getMinutes(),
-        ],
-        url: entry['Meeting Link'],
-      };
-    });
-
-    // Create the ICS file content
     const { error, value } = createEvents(events);
 
     if (error) {
       throw error;
     }
 
-    // Return the ICS file content
     return new NextResponse(value, {
       status: 200,
       headers: {
@@ -69,8 +40,42 @@ export async function POST(request) {
       },
     });
   } catch (error) {
+    console.error('Error processing file:', error);
     return NextResponse.json({ error: `Failed to process the file: ${error.message}` }, { status: 500 });
   }
+}
+
+async function interpretDataWithAI(jsonData) {
+  const prompt = `
+    You are an AI assistant that interprets Excel data and converts it into calendar events.
+    The data represents a schedule of classes or events.
+    Please analyze the following JSON data and extract the necessary information to create calendar events.
+    Each event should have a title, start date and time, end date and time, description, and URL if available.
+    Here's the data:
+    ${JSON.stringify(jsonData, null, 2)}
+    
+    Please return a JSON array of events in the following format:
+    [
+      {
+        "title": "Event Title",
+        "start": ["YYYY", "MM", "DD", "HH", "mm"],
+        "end": ["YYYY", "MM", "DD", "HH", "mm"],
+        "description": "Event description",
+        "url": "Event URL (if available)"
+      },
+      ...
+    ]
+  `;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 2000,
+  });
+
+  const aiInterpretedEvents = JSON.parse(response.choices[0].message.content);
+  return aiInterpretedEvents;
 }
 
 export const config = {

@@ -1,3 +1,5 @@
+'use client';
+
 // components/UploadForm.js
 
 import { useState } from 'react';
@@ -22,26 +24,28 @@ function UploadForm() {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Send the file to the server
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (response.ok) {
-      // Handle successful response
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'calendar.ics';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } else {
-      // Handle errors
-      const errorData = await response.json();
-      alert(`Error: ${errorData.error}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'calendar.ics';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('An error occurred while uploading the file. Please try again.');
     }
   };
 
