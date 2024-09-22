@@ -3,18 +3,22 @@
 import { LogIn } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
+import { useAuth } from "@clerk/nextjs";
 
 import { Button } from "@/components/ui/button"
+import { SignInButton } from "@clerk/nextjs";
+
+import React, { useEffect } from 'react';
 
 export function AuthPageJs() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
 
-  const handleGoogleSignIn = () => {
-    // Handle Google Sign In here
-    console.log("Signing in with Google");
-    // After successful sign-in, redirect to the converter page
-    router.push('/converter');
-  }
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push('/converter');
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   return (
     <div className="flex min-h-screen">
@@ -39,12 +43,13 @@ export function AuthPageJs() {
               Sign in to start converting your Excel schedules
             </p>
           </div>
-          <Button
-            onClick={handleGoogleSignIn}
-            className="w-full bg-white text-black hover:bg-gray-200 flex items-center justify-center">
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign in with Google
-          </Button>
+          <SignInButton mode="modal">
+            <Button
+              className="w-full bg-white text-black hover:bg-gray-200 flex items-center justify-center">
+              <LogIn className="mr-2 h-4 w-4" />
+              Sign in with Google
+            </Button>
+          </SignInButton>
           <p className="text-center text-sm text-gray-400">
             By signing in, you agree to our{" "}
             <Link href="/terms" className="underline hover:text-white">
