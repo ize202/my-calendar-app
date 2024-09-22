@@ -31,20 +31,27 @@ apiRoute.post(async (req, res) => {
 
     // Transform jsonData into events
     const events = jsonData.map((entry) => {
-      // Adjust these fields based on your Excel file's column names
-      const startDate = new Date(entry['Start Date']);
-      const endDate = new Date(entry['End Date']);
+      const [startDate, startTime] = entry['Date'].split(' ');
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      
+      // Assuming each session is 75 minutes (1 hour and 15 minutes)
+      const endDate = new Date(startDate);
+      endDate.setHours(startHour + 1);
+      endDate.setMinutes(startMinute + 15);
+
+      const startDateTime = new Date(startDate);
+      startDateTime.setHours(startHour);
+      startDateTime.setMinutes(startMinute);
 
       return {
-        title: entry['Class Name'] || 'Class',
-        description: entry['Description'] || '',
-        location: entry['Location'] || '',
+        title: `${entry['Course']} - ${entry['Topic']}`,
+        description: `Faculty: ${entry['Faculty']}\nMeeting Link: ${entry['Meeting Link']}`,
         start: [
-          startDate.getFullYear(),
-          startDate.getMonth() + 1,
-          startDate.getDate(),
-          startDate.getHours(),
-          startDate.getMinutes(),
+          startDateTime.getFullYear(),
+          startDateTime.getMonth() + 1,
+          startDateTime.getDate(),
+          startDateTime.getHours(),
+          startDateTime.getMinutes(),
         ],
         end: [
           endDate.getFullYear(),
@@ -53,6 +60,7 @@ apiRoute.post(async (req, res) => {
           endDate.getHours(),
           endDate.getMinutes(),
         ],
+        url: entry['Meeting Link'],
       };
     });
 
