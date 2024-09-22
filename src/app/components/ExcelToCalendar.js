@@ -113,13 +113,7 @@ export default function ExcelToCalendar() {
           Convert to Calendar
         </Button>
         {isUploading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-4"
-          >
-            <Progress value={uploadProgress} className="w-full" />
-          </motion.div>
+          <Progress value={uploadProgress} className="w-full" />
         )}
         {isConverted && (
           <motion.div
