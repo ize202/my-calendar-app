@@ -4,17 +4,28 @@ import Link from "next/link"
 import { useRouter } from 'next/navigation';
 import { useAuth } from "@clerk/nextjs";
 import { SignIn } from "@clerk/nextjs";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export function AuthPageJs() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    console.log('Auth state:', { isLoaded, isSignedIn });
     if (isLoaded && isSignedIn) {
+      setIsRedirecting(true);
       router.push('/converter');
     }
   }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (isRedirecting) {
+    return <div>Redirecting to converter...</div>;
+  }
 
   return (
     <div className="flex min-h-screen">
