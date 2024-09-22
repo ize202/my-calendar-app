@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 // You'll need to create these components or use a UI library that provides them
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { UserButton } from "@clerk/nextjs";
 
 export default function ExcelToCalendar() {
   const [file, setFile] = useState(null)
@@ -83,7 +84,10 @@ export default function ExcelToCalendar() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 relative">
+      <div className="absolute top-4 right-4">
+      <UserButton showName="/" />
+      </div>
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
