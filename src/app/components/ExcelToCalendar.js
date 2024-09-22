@@ -34,36 +34,51 @@ export default function ExcelToCalendar() {
     if (!file) return
     setIsUploading(true)
     setError(null)
+    setUploadProgress(0)
 
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/api/upload', true)
 
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'calendar.ics'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        setIsConverted(true)
-      } else {
-        const errorData = await response.json()
-        setError(`Error: ${errorData.error}`)
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress(percentComplete)
+        }
       }
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const blob = new Blob([xhr.response], { type: 'text/calendar' })
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'calendar.ics'
+          document.body.appendChild(a)
+          a.click()
+          a.remove()
+          setIsConverted(true)
+        } else {
+          const errorData = JSON.parse(xhr.responseText)
+          setError(`Error: ${errorData.error}`)
+        }
+        setIsUploading(false)
+      }
+
+      xhr.onerror = function() {
+        setError('An error occurred while uploading the file. Please try again.')
+        setIsUploading(false)
+      }
+
+      xhr.responseType = 'blob'
+      xhr.send(formData)
     } catch (error) {
       console.error('Error uploading file:', error)
       setError('An error occurred while uploading the file. Please try again.')
-    } finally {
       setIsUploading(false)
-      setUploadProgress(100)
     }
   }
 
@@ -113,7 +128,10 @@ export default function ExcelToCalendar() {
           Convert to Calendar
         </Button>
         {isUploading && (
-          <Progress value={uploadProgress} className="w-full" />
+          <div className="mt-4">
+            <Progress value={uploadProgress} className="w-full" />
+            <p className="text-center mt-2">{uploadProgress}% uploaded</p>
+          </div>
         )}
         {isConverted && (
           <motion.div
