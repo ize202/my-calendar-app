@@ -2,19 +2,24 @@
 
 import { LogIn } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from 'next/navigation';
 
 import { Button } from "@/components/ui/button"
 
 export function AuthPageJs() {
+  const router = useRouter();
+
   const handleGoogleSignIn = () => {
     // Handle Google Sign In here
-    console.log("Signing in with Google")
+    console.log("Signing in with Google");
+    // After successful sign-in, redirect to the converter page
+    router.push('/converter');
   }
 
   return (
-    (<div className="flex min-h-screen bg-black text-white">
+    <div className="flex min-h-screen">
       {/* Left Panel */}
-      <div className="flex-1 flex flex-col justify-between p-8">
+      <div className="flex-1 flex flex-col justify-between p-8 bg-[#18181b] text-white">
         <div>
           <span className="text-2xl font-semibold">Excel2Calendar</span>
         </div>
@@ -26,7 +31,7 @@ export function AuthPageJs() {
         </div>
       </div>
       {/* Right Panel */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-black text-white">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold">Welcome</h2>
@@ -53,6 +58,6 @@ export function AuthPageJs() {
           </p>
         </div>
       </div>
-    </div>)
+    </div>
   );
 }

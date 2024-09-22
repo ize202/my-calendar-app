@@ -1,13 +1,5 @@
-import ExcelToCalendar from './components/ExcelToCalendar';
-
-export const metadata = {
-  title: 'Excel to Google Calendar Converter',
-};
+import { AuthPageJs } from '@/components/auth-page';
 
 export default function Home() {
-  return (
-    <div>
-      <ExcelToCalendar />
-    </div>
-  );
+  return <AuthPageJs />;
 }
