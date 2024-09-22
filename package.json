@@ -9,13 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-progress": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.5.6",
     "ics": "^3.8.0",
+    "lucide-react": "^0.445.0",
     "multer": "^1.4.5-lts.1",
     "next": "14.2.13",
     "next-connect": "^1.0.0",
     "openai": "^4.63.0",
     "react": "^18",
     "react-dom": "^18",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss-animate": "^1.0.7",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },

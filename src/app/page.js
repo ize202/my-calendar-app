@@ -1,4 +1,4 @@
-import UploadForm from './components/UploadForm';
+import ExcelToCalendar from './components/ExcelToCalendar';
 
 export const metadata = {
   title: 'Excel to Google Calendar Converter',
@@ -7,10 +7,7 @@ export const metadata = {
 export default function Home() {
   return (
     <div>
-      <main>
-        <h1>Excel to Google Calendar Converter</h1>
-        <UploadForm />
-      </main>
+      <ExcelToCalendar />
     </div>
   );
 }
