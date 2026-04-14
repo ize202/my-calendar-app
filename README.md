@@ -4,19 +4,19 @@ Excel2Calendar is a Next.js utility that turns a spreadsheet into an `.ics` file
 
 ## What it is
 
-This repo is a small App Router prototype built with Next.js. It uses Clerk for sign-in, parses the first workbook sheet with `xlsx`, asks OpenAI to shape the rows into calendar events, and returns a generated ICS file.
+This repo is a small Next.js App Router prototype. It uses Clerk for sign-in, reads the first workbook sheet with `xlsx`, sends the rows to OpenAI to turn them into calendar events, and returns an ICS file.
 
 ## What problem it solves
 
-Schedule data often arrives as a spreadsheet that is annoying to re-enter by hand. This project was my pass at reducing that work to one upload and one download.
+Schedule data often arrives as a spreadsheet that is annoying to re-enter by hand. I built this to reduce that work to one upload and one download.
 
 ## What I built
 
 - A Clerk-backed sign-in flow and protected converter page
 - A drag-and-drop upload UI with progress feedback and download state
 - A server route that reads spreadsheet rows with `xlsx`
-- An OpenAI step that normalizes those rows into calendar events
-- ICS generation and browser download from the same flow
+- An OpenAI step that turns those rows into calendar events
+- ICS generation and browser download in the same flow
 
 ## Stack
 
@@ -54,4 +54,4 @@ OPENAI_API_KEY=...
 
 ## Current status
 
-Working prototype. It is best suited to one-sheet schedules where the event details can be inferred from row data.
+Working prototype. It is best suited to one-sheet schedules where the event details can be read from the row data.
