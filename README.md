@@ -1,82 +1,57 @@
-# Excel to Google Calendar Converter
+# Excel2Calendar
 
-## Description
+Excel2Calendar is a Next.js utility that turns a spreadsheet into an `.ics` file. Upload a class or event schedule, let the server extract event data, and download a calendar you can import into Google Calendar or Apple Calendar.
 
-This web application allows users to easily convert Excel spreadsheets containing schedule information into Google Calendar events. It provides a simple, intuitive interface for uploading Excel files and generating calendar files that can be imported into Google Calendar.
+## What it is
 
-## Features
+This repo is a small App Router prototype built with Next.js. It uses Clerk for sign-in, parses the first workbook sheet with `xlsx`, asks OpenAI to shape the rows into calendar events, and returns a generated ICS file.
 
-- Drag-and-drop file upload
-- Support for .xlsx file format
-- Real-time conversion progress indication
-- Downloadable .ics calendar file output
-- Responsive design for desktop and mobile use
-- User authentication with Clerk
+## What problem it solves
 
-## Technologies Used
+Schedule data often arrives as a spreadsheet that is annoying to re-enter by hand. This project was my pass at reducing that work to one upload and one download.
 
-- React.js
+## What I built
+
+- A Clerk-backed sign-in flow and protected converter page
+- A drag-and-drop upload UI with progress feedback and download state
+- A server route that reads spreadsheet rows with `xlsx`
+- An OpenAI step that normalizes those rows into calendar events
+- ICS generation and browser download from the same flow
+
+## Stack
+
 - Next.js 14
-- Tailwind CSS for styling
-- Framer Motion for animations
-- Lucide React for icons
-- XLSX library for Excel file parsing
-- ICS library for calendar file creation
-- OpenAI GPT-4 for intelligent event extraction
-- Clerk for user authentication
+- React
+- Clerk
+- OpenAI
+- XLSX
+- ICS
+- Tailwind CSS
 
-## Prerequisites
+## Screenshots or demo
 
-Before you begin, ensure you have met the following requirements:
-- Node.js (v14 or later)
-- npm or yarn
-- An OpenAI API key
-- A Clerk account and API keys
+1. Sign in.
+2. Open `/converter`.
+3. Upload an `.xlsx` file with schedule rows.
+4. Wait for the server to convert the first sheet into calendar events.
+5. Download `calendar.ics`.
 
-## Installation
+There is no hosted demo right now. Run it locally if you want to test the flow.
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/ize202/my-calendar-app.git
-   ```
+## Local setup
 
-2. Navigate to the project directory:
-   ```
-   cd excel-to-calendar-converter
-   ```
+1. Install dependencies with `npm install`.
+2. Create `.env.local` with:
 
-3. Install dependencies:
-   ```
-   npm install
-   ```
-   or
-   ```
-   yarn install
-   ```
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
+CLERK_SECRET_KEY=...
+OPENAI_API_KEY=...
+```
 
-4. Create a `.env.local` file in the root directory and add your environment variables:
-   ```
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-   CLERK_SECRET_KEY=your_clerk_secret_key
-   OPENAI_API_KEY=your_openai_api_key
-   ```
+3. Start the app with `npm run dev`.
+4. Visit `http://localhost:3000`.
 
-5. Run the development server:
-   ```
-   npm run dev
-   ```
-   or
-   ```
-   yarn dev
-   ```
+## Current status
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
-
-## Usage
-
-1. Sign in using your google account.
-2. On the converter page, drag and drop your Excel file or click to browse and select it.
-3. Click the "Convert to Calendar" button.
-4. Wait for the conversion process to complete.
-5. Once complete, the .ics file will automatically download.
-6. Import the .ics file into your preferred calendar application (e.g., Google Calendar).
+Working prototype. It is best suited to one-sheet schedules where the event details can be inferred from row data.
